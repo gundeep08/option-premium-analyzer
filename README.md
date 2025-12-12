@@ -1,11 +1,11 @@
-# Polygon API Lambda Function
+# Lambda Function
 
 This Lambda function fetches real options data using Polygon API for the Magnificent Seven stocks.
 
 ## Key Changes from Previous Version
 
 1. **Real Options Data**: Uses Polygon API to fetch actual options contracts and pricing
-2. **No Ranking Logic**: Simply fetches 21 options (3 per ticker) and stores them in S3
+2. **No Ranking Logic**: Fetches 1 option per ticker (7 options total) and stores them in S3
 3. **Better Rate Limiting**: Includes proper delays for Polygon API limits
 
 ## Setup Requirements
@@ -17,7 +17,7 @@ This Lambda function fetches real options data using Polygon API for the Magnifi
 
 ## Deployment
 
-1. Upload `lambda_deployment_polygon.zip` to AWS Lambda
+1. Upload `lambda_deployment.zip` to AWS Lambda
 2. Set environment variable `POLYGON_API_KEY` with your API key
 3. Configure timeout to 5 minutes (Polygon API can be slow)
 4. Set memory to 256MB
@@ -41,8 +41,10 @@ Each option includes:
 - `last_price`: Last trade price
 - `volume`: Trading volume
 
+**Stored in S3 Path**: `s3://faang-options/magnificent-seven-options/`
+
 ## Rate Limits
 
 - Free tier: 5 requests per minute
-- Function includes 0.5 second delays between requests
-- Total execution time: ~4-5 minutes for all 7 stocks
+- Function includes 2-second delays between requests
+- Total execution time: ~15 seconds for all 7 stocks
