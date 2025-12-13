@@ -17,7 +17,7 @@ def lambda_handler(event, context):
         table = 'magnificent_seven_options'
         output_location = 's3://faang-options/athena-results/'
         
-        # Simple query to get all records
+        # Query to get records from most recent file (assumes files are processed in chronological order)
         query = """
         SELECT 
           option.underlying_ticker,
@@ -29,9 +29,12 @@ def lambda_handler(event, context):
           option.open,
           option.high,
           option.low,
-          option.vwap
+          option.vwap,
+          option.timestamp
         FROM magnificent_seven_options
         CROSS JOIN UNNEST(records) AS t(option)
+        ORDER BY option.timestamp DESC
+        LIMIT 7
         """
         
         # Execute Athena query

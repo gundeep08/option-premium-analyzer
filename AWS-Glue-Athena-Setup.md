@@ -23,7 +23,7 @@ This document outlines the steps to set up AWS Glue and Athena to analyze option
    - Click **Add an S3 data source**
 4. **IAM role** → **Create new role** → Name: `GlueServiceRole`
 5. **Target database**: Select `options_analytics`
-6. **Crawler schedule**: On demand
+6. **Crawler schedule**: Schedule → `cron(30 19 * * ? *)` (runs 30 minutes after Lambda data fetch)
 7. Click **Create crawler**
 
 ## Step 3: Fix IAM Permissions
@@ -34,11 +34,19 @@ This document outlines the steps to set up AWS Glue and Athena to analyze option
 4. Search and attach: `AmazonS3FullAccess`
 5. Click **Add permissions**
 
-## Step 4: Run Crawler
+## Step 4: Scheduled Crawler Execution
 
+**Note**: Crawler now runs automatically on schedule (30 minutes after Lambda execution)
+
+**Manual run (if needed)**:
 1. Go back to **Glue Console** → **Crawlers**
 2. Select `options-crawler` → **Run crawler**
 3. Wait for completion (should show "READY" status)
+
+**Schedule Details**:
+- Lambda runs at 7:00 PM UTC (`cron(0 19 * * ? *)`)
+- Crawler runs at 7:30 PM UTC (`cron(30 19 * * ? *)`)
+- 30-minute delay ensures Lambda completes data upload to S3
 
 ## Step 5: Setup Athena
 
@@ -76,7 +84,7 @@ LOCATION 's3://faang-options/magnificent-seven-options/'
 TBLPROPERTIES ('has_encrypted_data'='false');
 ```
 
-## Step 7: Query Top 3 Most Profitable Options
+## Step 7: Query Most recent Options from each of the Magnificent Seven Tickers
 
 ```sql
 SELECT 
@@ -89,11 +97,13 @@ SELECT
           option.open,
           option.high,
           option.low,
-          option.vwap
+          option.vwap,
+          option.timestamp
         FROM magnificent_seven_options
         CROSS JOIN UNNEST(records) AS t(option)
+        ORDER BY option.timestamp DESC
+        LIMIT 7
 ```
-
 
 ## Troubleshooting
 
